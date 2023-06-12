@@ -24,7 +24,6 @@ class FileMaker(private val context: Context) {
     private val channelClient by lazy { Wearable.getChannelClient(context) }
 
     private val DATA_CHANNEL_PATH = "/vibauth_data"
-
     private val name = "watch_record"
 
     private var transcriptionNodeId: String? = null

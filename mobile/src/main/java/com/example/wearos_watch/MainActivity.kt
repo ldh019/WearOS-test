@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         capabilityClient.addListener(
             viewModel,
             Uri.parse("wear://"),
-            CapabilityClient.FILTER_REACHABLE
+            CapabilityClient.FILTER_ALL
         )
         messageClient.addListener(viewModel)
         channelClient.registerChannelCallback(channelCallback)
@@ -180,7 +180,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         binding.buttonRecord.setOnClickListener {
             if (binding.buttonRecord.text == "START") {
                 if (binding.tvFileName.text != "") {
-                    sendRecordMessage("start")
                     sensorManager.registerListener(
                         this,
                         accelerometer,
@@ -193,8 +192,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     )
                     CoroutineScope(Dispatchers.Main).launch {
                         Toast.makeText(this@MainActivity, "waiting", Toast.LENGTH_SHORT).show()
-                        delay(1000)
-                        delay(1000)
+                        delay(2000)
+                        sendRecordMessage("start")
                         Toast.makeText(this@MainActivity, "start", Toast.LENGTH_SHORT).show()
                         maker.start(binding.tvFileName.text.toString())
                     }
@@ -241,11 +240,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         val content = when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
-                "AP ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
+                "A ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
             }
 
             Sensor.TYPE_GYROSCOPE -> {
-                "GP ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
+                "G ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
             }
 
             else -> return
@@ -276,15 +275,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun connectWithWatch() {
-        lifecycleScope.launch {
+        lifecycleScope.launch(Dispatchers.Default) {
             try {
+                Log.d(TAG, "connectWithWatch")
                 val myNode = Wearable.getNodeClient(this@MainActivity).localNode.await().id
+                Log.d(TAG, "my node id: $myNode")
 
                 val nodes = capabilityClient
-                    .getCapability(CAPABILITY_NAME, CapabilityClient.FILTER_REACHABLE)
+                    .getCapability(CAPABILITY_NAME, CapabilityClient.FILTER_ALL)
                     .await().nodes
 
                 watchNode = pickBestNodeId(nodes)
+                Log.d(TAG, "watch node id: ${watchNode?.id}")
+
 
                 watchNode?.let { node ->
                     messageClient.sendMessage(node.id, START_ACTIVITY_PATH, byteArrayOf())

@@ -19,6 +19,7 @@ import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -56,7 +57,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         binding.tvTitle.text = it.data.toString(Charsets.UTF_8)
                         when (it.path) {
                             START_RECORD_PATH -> {
-                                maker.start()
                                 sensorManager.registerListener(
                                     this@MainActivity,
                                     accelerometer,
@@ -71,6 +71,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                                 ).also { result ->
                                     Log.d("$TAG-regi", "gyroscope: $result")
                                 }
+                                delay(2000)
+                                maker.start()
                             }
                             STOP_RECORD_PATH -> {
                                 maker.end()
@@ -115,11 +117,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         val content = when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
-                "AW ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
+                "A ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
             }
 
             Sensor.TYPE_GYROSCOPE -> {
-                "GW ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
+                "G ${event.timestamp} ${event.values[0]} ${event.values[1]} ${event.values[2]}\n"
             }
 
             else -> return
